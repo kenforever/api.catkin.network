@@ -1,0 +1,10 @@
+test.ipynb
+__pycache__/
+poetry.lock
+app/logs/
+.env
+.env.dev
+test.json
+test.mp4
+.DS_Store
+test.png
