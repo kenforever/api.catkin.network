@@ -16,7 +16,7 @@ async def root():
 
 origins = [
     "http://localhost:3002",
-    "https://catkin.kenforever.cc",
+    "https://dashboard.catkin.network",
     "http://localhost:3001",
     "http://localhost:3000",
     "http://localhost:3003",
@@ -24,6 +24,7 @@ origins = [
     "http://localhost:3005",
     "http://localhost:3006",
     "http://localhost:3007",
+    
 ]
 
 
