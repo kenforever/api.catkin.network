@@ -18,6 +18,8 @@ supabase: Client = create_client(
 
 # database
 user_info_db = supabase.table("user_info")
+product_info_db = supabase.table("product_info")
+payment_db = supabase.table("payment")
 
 # groups_db = supabase.table("groups")
 # permissions_db = supabase.table("permissions")

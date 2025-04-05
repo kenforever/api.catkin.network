@@ -1,7 +1,6 @@
 import os
 from app.utils.redis import set_nonce_redis, get_nonce, delete_nonce
-from app.utils.supabase import user_info_db, product_info_db
-
+from app.utils.supabase import user_info_db
 
 def gernate_nonce() -> str:
     """

@@ -6,11 +6,9 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 from app.utils.access import verify_token
-from app.utils.redis import get_nonce, delete_nonce
-from app.utils.config import config
+from app.utils.supabase import product_info_db
 
 from .schemas import get_siwe_message_data, verify_siwe_data, ProductCreate, ProductUpdate, ProductResponse
-from .services import set_nonce, get_user, product_info_db
 from app.utils.logger import logger
 from fastapi import Request
 from app.models.user import User_Data
