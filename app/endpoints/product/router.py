@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 from app.utils.access import verify_token
-from app.utils.supabase import product_info_db
+from app.utils.supabase import product_info_db, user_info_db
 
 from .schemas import get_siwe_message_data, verify_siwe_data, ProductCreate, ProductUpdate, ProductResponse
 from app.utils.logger import logger
@@ -69,14 +69,32 @@ async def get_product(product_id: int):
     獲取單個產品詳情
     """
     try:
-        result = product_info_db.select("*").eq("id", product_id).execute()
-        if result.data and len(result.data) > 0:
-            return result.data[0]
-        else:
+        product_result = product_info_db.select("*").eq("id", product_id).execute()
+        if not product_result.data or len(product_result.data) == 0:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"找不到 ID 為 {product_id} 的產品"
             )
+        
+        product_data = product_result.data[0]
+        owner_address = product_data.get("owner")
+        
+        network = None
+        token_address = None # 初始化 token_address
+        if owner_address:
+            # 同時查詢 network 和 token_address
+            user_result = user_info_db.select("network, token_address").eq("address", owner_address).execute()
+            if user_result.data and len(user_result.data) > 0:
+                user_data = user_result.data[0]
+                network = user_data.get("network")
+                token_address = user_data.get("token_address") # 獲取 token_address
+
+        # 將 network 和 token_address 添加到 product_data
+        product_data["network"] = network
+        product_data["token_address"] = token_address # 添加 token_address
+        
+        return product_data
+        
     except Exception as e:
         logger.error(f"獲取產品詳情失敗: {e}")
         raise HTTPException(

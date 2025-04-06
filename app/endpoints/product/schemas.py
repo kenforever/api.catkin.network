@@ -34,3 +34,5 @@ class ProductResponse(BaseModel):
     title: str
     description: Optional[str] = None
     price: int
+    network: Optional[str] = None
+    token_address: Optional[str] = None

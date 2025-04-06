@@ -6,6 +6,7 @@ import shortuuid
 from app.utils.logger import logger
 from fastapi import Request
 from app.utils.supabase import payment_db
+from .schemas import UpdatePaymentData
 
 """
 - return calldata by:
@@ -74,40 +75,49 @@ async def new_payment(
         )
 
 @router.get("/tx/submit")
-async def submit_tx(
-    payment_id: str,
-    tx_hash: str,
-):
+async def submit_tx(payment_data: UpdatePaymentData):
     """
-    Submit the transaction hash
+    Update a payment with JSON payload
+    Only non-null fields will be updated
     """
-    # check if payment id is valid
-    # if not, raise error
-    if not payment_id:
+    # 確認 payment_id 存在
+    if not payment_data.payment_id:
         raise HTTPException(
             status_code=400,
-            detail="payment_id is empty"
+            detail="payment_id is required"
         )
-
-    # update the payment with the tx hash
+    
+    # 從請求體構建更新數據，僅包含非空欄位
+    update_data = {}
+    for field, value in payment_data.model_dump().items():
+        if field != "payment_id" and value is not None:
+            update_data[field] = value
+    
+    # 如果沒有要更新的欄位則返回錯誤
+    if not update_data:
+        raise HTTPException(
+            status_code=400,
+            detail="No fields to update"
+        )
+    
+    # 更新支付資訊
     try:
-        result = payment_db.update({"tx_hash": tx_hash}).eq("payment_id", payment_id).execute()
+        result = payment_db.update(update_data).eq("payment_id", payment_data.payment_id).execute()
         if result.data and len(result.data) > 0:
             return result.data[0]
         else:
             raise HTTPException(
-                status_code=500,
-                detail="Unable to update payment"
+                status_code=404,
+                detail="Payment not found or unable to update"
             )
     except Exception as e:
-        logger.error(f"Submit transaction failed: {e}")
+        logger.error(f"Update payment failed: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error occurred while submitting transaction: {str(e)}"
+            detail=f"Error occurred while updating payment: {str(e)}"
         )
-    
 
-@router.get("{payment_id}/status")
+@router.get("/{payment_id}/status")
 async def get_tx_status(
     payment_id: str,
 ):

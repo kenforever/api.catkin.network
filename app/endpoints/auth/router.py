@@ -1,5 +1,5 @@
 import jwt
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from siwe import SiweMessage
 from datetime import datetime, timedelta
@@ -12,7 +12,9 @@ from .schemas import get_siwe_message_data, verify_siwe_data
 from .services import set_nonce, get_user
 from app.utils.logger import logger
 from fastapi import Request
-
+from app.utils.access import verify_token
+from app.models.user import User_Data
+from app.utils.supabase import user_info_db
 
 router = APIRouter()
 @router.post("/get_siwe_message")
@@ -70,3 +72,15 @@ async def verify_siwe(data: verify_siwe_data):
     )
 
     return {"token": token}
+
+@router.get("/me")
+async def me(token_payload: User_Data = Depends(verify_token)):
+    # get user info from db
+    try:
+        user_info = user_info_db.select("*").eq("address", token_payload.address).execute()
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=500, detail="Failed to get user info")
+
+    response = user_info.data[0]
+    return response
